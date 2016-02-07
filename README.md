@@ -1,5 +1,5 @@
 # gbRobot
-Game Britannia Twitch Bot
+GameBritannia's Twitch Chat Bot
 
 This is an Twitch IRC channel bot intended to react to user '!' commands as well as automatically execute certain actions based on user activity.
 
