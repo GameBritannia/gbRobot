@@ -1,0 +1,12 @@
+[irc]
+endpoint =
+nickname =
+realname =
+password =
+channel =
+
+[gbrobot]
+triggers =
+    test
+    hello
+    world
