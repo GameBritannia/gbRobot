@@ -1,6 +1,33 @@
+import json
+import pytz
+import requests
+from datetime import datetime
+from dateutil import parser
+from random import randint
 from twisted.internet import protocol
 from twisted.python import log
 from twisted.words.protocols import irc
+
+
+def get_response(message, user=None):
+    user = user.split('!')[0]
+    if message == "test":
+        return "hello"
+    if message == "!mmr":
+        return user + " your mmr is: " + str(randint(0, 9999))
+    if message == "!social":
+        return "Follow us at http://twitter.com/GameBritannia, like us at http://facebook.com/GameBritannia & don't forget to follow!"
+    if message == "!uptime":
+        r = requests.get("https://api.twitch.tv/kraken/streams/gamebritannia")
+        if r.status_code == 200:
+            response = r.json()
+            if response["stream"] is not None:
+                uptime = datetime.now(pytz.utc) - parser.parse(response["stream"]["created_at"])
+                return "GameBritannia has been streaming for: " + str(uptime.days) + " days, " + str(uptime.seconds) + " seconds."
+            else:
+                return "GameBritannia is offline. Check back later!"
+        else:
+            return "Could not retrieve uptime"
 
 
 class GBRobot(irc.IRCClient):
@@ -19,24 +46,21 @@ class GBRobot(irc.IRCClient):
         """Called when bot has successfully signed on to server."""
         log.msg("Signed on")
         if self.nickname != self.factory.nickname:
-            log.msg('Your nickname was already occupied, actual nickname is ''"{}".'.format(self.nickname))
+            log.msg('Name taken, new is ''"{}".'.format(self.nickname))
         self.join(self.factory.channel)
 
     def joined(self, channel):
         """Called when the bot joins the channel."""
-        log.msg("[{nick} has joined {channel}]".format(nick=self.nickname, channel=self.factory.channel,))
+        log.msg("GbRobot joined " + self.factory.channel)
 
-    def privmsg(self, user, channel, msg):
+    def privmsg(self, user, channel, incoming_message):
         """Called when the bot receives a message."""
         sendTo = channel
-        msg = msg.lower()
-        for trigger in self.factory.triggers:
-            if msg in trigger:
-                break
+        incoming_message = incoming_message.lower()
 
         if sendTo:
-            message = "Hello team!"
-            self.msg(sendTo, message)
+            response = get_response(incoming_message, user)
+            self.msg(sendTo, response)
             log.msg(
                 "sent message to {receiver}, triggered by {sender}:\n\t{quote}"
                 .format(receiver=sendTo, sender=sendTo, quote=None)
