@@ -11,13 +11,25 @@ from twisted.words.protocols import irc
 
 def get_response(message, user=None):
     user = user.split('!')[0]
-    if message == "test":
-        return "hello"
+
+    # MMR
     if message == "!mmr":
         return user + " your mmr is: " + str(randint(0, 9999))
-    if message == "!social":
+
+    # Giveaway
+    elif message == "!giveaway":
+        return "We're giving away 3 pairs of tickets to PC Gamers Weekender on March 5th-6th in London: http://bit.ly/24pBx8D"
+
+    # Social
+    elif message == "!social":
         return "Follow us at http://twitter.com/GameBritannia, like us at http://facebook.com/GameBritannia & don't forget to follow!"
-    if message == "!uptime":
+
+    # Rules
+    elif message == "!rules":
+        return "Standins: Allowed as long as they study at that University"
+
+    # Uptime
+    elif message == "!uptime":
         r = requests.get("https://api.twitch.tv/kraken/streams/gamebritannia")
         if r.status_code == 200:
             response = r.json()
@@ -28,6 +40,8 @@ def get_response(message, user=None):
                 return "GameBritannia is offline. Check back later!"
         else:
             return "Could not retrieve uptime"
+    else:
+        return None
 
 
 class GBRobot(irc.IRCClient):
@@ -60,11 +74,12 @@ class GBRobot(irc.IRCClient):
 
         if sendTo:
             response = get_response(incoming_message, user)
-            self.msg(sendTo, response)
-            log.msg(
-                "sent message to {receiver}, triggered by {sender}:\n\t{quote}"
-                .format(receiver=sendTo, sender=sendTo, quote=None)
-            )
+            if response:
+                self.msg(sendTo, response)
+                log.msg(
+                    "sent message to {receiver}, triggered by {sender}:\n\t{quote}"
+                    .format(receiver=sendTo, sender=sendTo, quote=None)
+                )
 
 
 class GBRobotFactory(protocol.ClientFactory):
